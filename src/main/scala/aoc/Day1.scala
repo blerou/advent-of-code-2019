@@ -30,17 +30,15 @@ What is the sum of the fuel requirements for all of the modules on your spacecra
 
   def fuelRequired(mass: Int): Int = math.floor(mass / 3).toInt - 2
 
-  def moduleMass(): Iterator[Int] = {
+  def moduleMass(): LazyList[Int] = {
     val inputPath = "day1/input"
     import scala.io.Source
     val modules = Source.fromResource(inputPath).getLines
-    modules map Integer.parseInt
+    modules.to(LazyList).map(Integer.parseInt)
   }
 
   def part1(): Unit = {
-    val modulesMass = moduleMass()
-    val moduleFuel = modulesMass map fuelRequired
-    val fuel = moduleFuel.sum
+    val fuel = moduleMass().foldLeft(0)(_ + fuelRequired(_))
     println(s"part 1 solution: $fuel")
   }
 
@@ -62,22 +60,14 @@ What is the sum of the fuel requirements for all of the modules on your spacecra
 
    */
 
-  def fuelFuel(mass: Int): Int = fuelFuel(mass, 0)
-
   @scala.annotation.tailrec
-  def fuelFuel(mass: Int, all: Int): Int = {
+  def fuelFuel(mass: Int, all: Int = 0): Int = {
     val fuel = fuelRequired(mass)
-    if (fuel <= 0) {
-      all
-    } else {
-      fuelFuel(fuel, all + fuel)
-    }
+    if (fuel <= 0) all else fuelFuel(fuel, all + fuel)
   }
 
   def part2(): Unit = {
-    val modulesMass = moduleMass()
-    val moduleFuel = modulesMass map fuelFuel
-    val fuel = moduleFuel.sum
+    val fuel = moduleMass().foldLeft(0)(_ + fuelFuel(_))
     println(s"part 2 solution: $fuel")
   }
 
