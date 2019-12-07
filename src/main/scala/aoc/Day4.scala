@@ -29,33 +29,85 @@ Your puzzle input is 136760-595730.
 
   def load: (Int, Int) = (136760, 595730)
 
-  def valid(i: Int): Boolean = {
-    val s = i.toString
-    lazy val double: Boolean = (0 until s.length - 1).foldLeft(false) {
+  def double(s: String): Boolean =
+    (0 until s.length - 1).foldLeft(false) {
       case (double, i) =>
         double || s(i) == s(i + 1)
     }
-    lazy val increase: Boolean = (0 until s.length - 1).foldLeft(true) {
+
+  def increase(s: String): Boolean =
+    (0 until s.length - 1).foldLeft(true) {
       case (inc, i) =>
         inc && s(i) <= s(i + 1)
     }
-    double && increase
+
+  type Rule = String => Boolean
+
+  def valid(i: Int, rules: Seq[Rule]): Boolean = {
+    val s = i.toString
+    var result = true
+    for (rule <- rules)
+      result &&= rule(s)
+    result
   }
 
-  def passwordCount(low: Int, up: Int): Int = {
+  def passwordCount(low: Int, up: Int, rules: Seq[Rule]): Int = {
     var count = 0
-    for (i <- low to up if valid(i))
+    for (i <- low to up if valid(i, rules))
       count += 1
     count
   }
 
   def part1(): Unit = {
     val (low, up) = load
-    val result = passwordCount(low, up)
+    val rules: Seq[Rule] = Seq(double, increase)
+    val result = passwordCount(low, up, rules)
     println(s"part 1 solution: $result")
+  }
+
+  /*
+
+--- Part Two ---
+
+An Elf just remembered one more important detail: the two adjacent matching digits are not part of a larger group of matching digits.
+
+Given this additional criterion, but still ignoring the range rule, the following are now true:
+
+    112233 meets these criteria because the digits never decrease and all repeated digits are exactly two digits long.
+    123444 no longer meets the criteria (the repeated 44 is part of a larger group of 444).
+    111122 meets the criteria (even though 1 is repeated more than twice, it still contains a double 22).
+
+How many different passwords within the range given in your puzzle input meet all of the criteria?
+
+Your puzzle input is still 136760-595730.
+
+   */
+
+  def hasPair(s: String): Boolean = {
+    var result = false
+    var s1 = s
+    while (!result && !s1.isEmpty) {
+      val rep = s1.takeWhile(_ == s1(0))
+      if (rep.length == 2)
+        result = true
+      else
+        s1 = s1.dropWhile(_ == s1(0))
+    }
+    result
+  }
+
+  def hasPair2(s: String): Boolean =
+    s.groupBy(identity).mapValues(_.length).exists(_._2 == 2)
+
+  def part2(): Unit = {
+    val (low, up) = load
+    val rules: Seq[Rule] = Seq(increase, double, hasPair)
+    val result = passwordCount(low, up, rules)
+    println(s"part 2 solution: $result")
   }
 
   def main(args: Array[String]): Unit = {
     part1()
+    part2()
   }
 }
